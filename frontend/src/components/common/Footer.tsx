@@ -1,8 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, ShieldCheck, Clock, Sparkles } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Heart, ShieldCheck, Clock, Sparkles, Lock } from 'lucide-react';
 
 export const Footer: React.FC = () => {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/' || location.pathname === '/home';
+
   return (
     <footer className="bg-[#FAF7EE] border-t border-sand-border mt-20">
       {/* Top Value Propositions */}
@@ -128,10 +131,24 @@ export const Footer: React.FC = () => {
 
         <div className="border-t border-sand-border/70 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-olive-dark/60 gap-4">
           <p>© {new Date().getFullYear()} BiteFlow Inc. All rights reserved.</p>
-          <div className="flex items-center gap-1">
-            <span>Crafted with</span>
-            <Heart className="w-3.5 h-3.5 text-terracotta fill-terracotta" />
-            <span>for food connoisseurs</span>
+          <div className="flex items-center gap-3.5">
+            {isHomePage && (
+              <>
+                <Link
+                  to="/admin/login"
+                  className="text-xs text-olive-dark/50 hover:text-olive transition-colors flex items-center gap-1.5 font-medium"
+                >
+                  <Lock className="w-3 h-3 text-olive/60" />
+                  <span>Admin Login</span>
+                </Link>
+                <span className="text-sand-border">•</span>
+              </>
+            )}
+            <div className="flex items-center gap-1">
+              <span>Crafted with</span>
+              <Heart className="w-3.5 h-3.5 text-terracotta fill-terracotta" />
+              <span>for food connoisseurs</span>
+            </div>
           </div>
         </div>
       </div>

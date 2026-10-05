@@ -37,6 +37,10 @@ out/
 **/.env.development.local
 **/.env.test.local
 **/.env.production.local
+credentials.*
+credentials/
+[Cc]redentials.*
+[Cc]redentials/
 
 # Preserve example environment templates
 !.env.example

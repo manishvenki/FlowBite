@@ -18,6 +18,23 @@ export const LoginPage: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
 
   const redirectPath = new URLSearchParams(location.search).get('redirect') || '/';
+  const isAdminLogin = location.pathname.includes('/admin') || redirectPath === '/admin';
+
+  // If already logged in as ADMIN, forward directly to admin portal
+  React.useEffect(() => {
+    const token = localStorage.getItem('biteflow_token');
+    const storedUser = localStorage.getItem('biteflow_user');
+    if (token && storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.role === 'ADMIN' && isAdminLogin) {
+          navigate('/admin', { replace: true });
+        }
+      } catch (e) {
+        // ignore JSON parse error
+      }
+    }
+  }, [isAdminLogin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,10 +74,12 @@ export const LoginPage: React.FC = () => {
             className="w-14 h-14 object-contain rounded-2xl mx-auto shadow-subtle mb-2"
           />
           <h1 className="font-serif-title text-2xl sm:text-3xl font-bold text-olive-dark">
-            Sign In to BiteFlow
+            {isAdminLogin ? 'Store Admin Sign In' : 'Sign In to BiteFlow'}
           </h1>
           <p className="text-xs sm:text-sm text-olive-dark/70">
-            Order fresh meals from your favorite neighborhood kitchens
+            {isAdminLogin
+              ? 'Enter administrator credentials to manage your store'
+              : 'Order fresh meals from your favorite neighborhood kitchens'}
           </p>
         </div>
 

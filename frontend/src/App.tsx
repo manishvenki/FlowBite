@@ -52,6 +52,7 @@ export const App: React.FC = () => {
                 <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
                 <Route path="cart" element={<CartPage />} />
                 <Route path="login" element={<LoginPage />} />
+                <Route path="admin/login" element={<LoginPage />} />
                 <Route path="register" element={<RegisterPage />} />
 
                 {/* Protected Customer Routes */}

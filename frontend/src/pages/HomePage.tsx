@@ -9,6 +9,7 @@ import {
   MapPin,
   Clock,
   ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { Restaurant } from '../types/restaurant';
 import { Category } from '../types/category';
@@ -318,6 +319,21 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Subtle Bottom Admin / Partner Portal Access */}
+      <section className="pt-8 pb-2 border-t border-sand-border/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-olive-dark/60">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-olive/50" />
+          <span className="font-medium text-olive-dark/70">BiteFlow Kitchen & Store Operations</span>
+        </div>
+        <Link
+          to="/admin/login"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sand-border bg-[#FFFDF5] text-xs font-semibold text-olive-dark/80 hover:text-olive hover:border-olive/40 hover:bg-sand/30 transition-all shadow-subtle"
+        >
+          <Lock className="w-3.5 h-3.5 text-olive" />
+          <span>Admin Login</span>
+        </Link>
+      </section>
     </div>
   );
 };

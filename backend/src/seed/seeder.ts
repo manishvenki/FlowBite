@@ -22,10 +22,10 @@ const seedDatabase = async () => {
     await mongoose.connect(mongoURI);
     console.log('[BiteFlow Seeder] Connected to MongoDB.');
 
-    // Clear existing collections
+    // Clear existing collections (preserve custom user accounts)
     console.log('[BiteFlow Seeder] Clearing existing data...');
     await Promise.all([
-      User.deleteMany({}),
+      User.deleteMany({ email: { $in: seedUsers.map((u) => u.email) } }),
       Restaurant.deleteMany({}),
       Category.deleteMany({}),
       Food.deleteMany({}),
