@@ -9,6 +9,16 @@
   A modern full-stack food ordering platform built with React, TypeScript, Node.js, Express, and MongoDB.
 
   <p>
+    <a href="https://flow-bite-lime.vercel.app/" target="_blank">
+      <img src="https://img.shields.io/badge/Live_Demo-flow--bite--lime.vercel.app-68734F?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+    </a>
+  </p>
+
+  <p>
+    <b>🌐 Live Production Web App:</b> <a href="https://flow-bite-lime.vercel.app/" target="_blank">https://flow-bite-lime.vercel.app/</a>
+  </p>
+
+  <p>
     <img src="https://img.shields.io/badge/React-18.3.1-61DAFB?style=flat&logo=react&logoColor=black" alt="React" />
     <img src="https://img.shields.io/badge/TypeScript-5.7.3-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript" />
     <img src="https://img.shields.io/badge/Vite-6.0.7-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite" />
@@ -25,16 +35,26 @@
 
 ## 📸 Product Preview
 
-Real screenshots captured directly from the running BiteFlow application:
+Real screenshots captured directly from the live hosted BiteFlow application ([https://flow-bite-lime.vercel.app/](https://flow-bite-lime.vercel.app/)):
 
 <div align="center">
 
-### Customer Storefront (Bengaluru Kitchens & Dishes)
+### Customer Storefront (Bengaluru Kitchens & Delivery Area)
 <img src="docs/screenshots/home.png" alt="BiteFlow Customer Home" width="96%" />
 
 <br/><br/>
 
 <table>
+  <tr>
+    <td width="50%" align="center">
+      <b>Curated Restaurant Discovery & Dietary Tags</b><br/><br/>
+      <img src="docs/screenshots/restaurants.png" alt="BiteFlow Restaurant Directory" width="100%" />
+    </td>
+    <td width="50%" align="center">
+      <b>Restaurant Detail & Interactive Menu</b><br/><br/>
+      <img src="docs/screenshots/restaurant-detail.png" alt="BiteFlow Restaurant Detail Menu" width="100%" />
+    </td>
+  </tr>
   <tr>
     <td width="50%" align="center">
       <b>Admin Kitchen Operations Dashboard</b><br/><br/>
@@ -402,14 +422,20 @@ Backend API Server (Express)
 
 ## 🚢 Deployment Architecture
 
+| Tier | Service | Deployment Platform | Live Endpoint / URL |
+| :--- | :--- | :--- | :--- |
+| **Frontend** | React 18 + Vite (SPA) | Vercel | [https://flow-bite-lime.vercel.app/](https://flow-bite-lime.vercel.app/) |
+| **Backend** | Node.js + Express REST API | Vercel | [https://biteflow-backend.vercel.app/api](https://biteflow-backend.vercel.app/api) |
+| **Database** | MongoDB Atlas Cluster | MongoDB Cloud | Mongoose ODM Connection |
+
 ```text
-Frontend (React 18) ──► Vercel (SPA Rewrites via vercel.json)
-Backend (Express)   ──► Vercel Serverless / Node Container
+Frontend (React 18) ──► https://flow-bite-lime.vercel.app
+Backend (Express)   ──► https://biteflow-backend.vercel.app/api
 Database            ──► MongoDB Atlas Cluster
 ```
 
-- **Frontend Deployment**: Connect GitHub repo to Vercel, set root directory to `frontend`, build command `npm run build`, output directory `dist`, and set `VITE_API_URL`.
-- **Backend Deployment**: Set root directory to `backend`, configure `MONGODB_URI`, `JWT_SECRET`, `NODE_ENV=production`, and `CORS_ORIGIN`.
+- **Frontend Deployment**: Hosted on Vercel with SPA routing rewrites (`vercel.json`), connected to production API via `VITE_API_URL=https://biteflow-backend.vercel.app`.
+- **Backend Deployment**: Hosted on Vercel Serverless with configured `MONGODB_URI`, `JWT_SECRET`, and production CORS allowing `https://flow-bite-*.vercel.app`.
 
 ---
 
