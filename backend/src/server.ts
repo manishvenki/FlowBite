@@ -19,29 +19,41 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB
 connectDB();
 
-// Configurable production-safe CORS with LAN network support
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
-  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+// Configurable production-safe CORS with LAN and Vercel deployment support
+const defaultAllowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
 
-const isLocalOrLanOrigin = (origin: string): boolean => {
-  // Direct match from configured allowed origins
+const envAllowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean)
+  : [];
+
+const allowedOrigins = [...defaultAllowedOrigins, ...envAllowedOrigins];
+
+const isAllowedOrigin = (origin: string): boolean => {
+  // Direct match against configured origins
   if (allowedOrigins.includes(origin)) return true;
-  // In development, also permit standard private LAN IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-  if (process.env.NODE_ENV !== 'production' || !process.env.CORS_ORIGIN) {
-    const isPrivateLan = /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|localhost|127\.0\.0\.1)(:\d+)?$/.test(
-      origin
-    );
-    if (isPrivateLan) return true;
+
+  // BiteFlow Vercel frontend deployments (production, branch, and preview deployments)
+  if (/^https:\/\/(flow-bite|biteflow)[a-z0-9-]*\.vercel\.app$/i.test(origin)) {
+    return true;
   }
+
+  // Local development: localhost, 127.0.0.1, and private LAN IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+  const isLocalOrLan = /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|localhost|127\.0\.0\.1)(:\d+)?$/.test(
+    origin
+  );
+  if (isLocalOrLan) return true;
+
   return false;
 };
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps, curl, or server-to-server)
-      if (!origin || isLocalOrLanOrigin(origin)) {
+      // Allow requests with no origin (e.g. mobile apps, curl, or server-to-server health checks)
+      if (!origin || isAllowedOrigin(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`Origin '${origin}' not permitted by BiteFlow CORS policy`));
