@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   MapPin,
@@ -60,6 +60,53 @@ export const RestaurantDetailPage: React.FC = () => {
     fetchRestaurantDetail();
   }, [id]);
 
+  // Derive unique categories from foods unconditionally
+  const foodCategories = Array.from(
+    new Set(
+      (foods || []).map((food) => {
+        if (typeof food.categoryId === 'object' && food.categoryId !== null) {
+          return (food.categoryId as any).name;
+        }
+        return 'Specialties';
+      })
+    )
+  );
+
+  // Filter foods by selectedCategory & onlyVeg using robust normalized matching
+  const filteredFoods = (foods || []).filter((food) => {
+    const catName =
+      typeof food.categoryId === 'object' && food.categoryId !== null
+        ? (food.categoryId as any).name
+        : 'Specialties';
+
+    const matchesVeg = !onlyVeg || food.isVeg;
+    if (!matchesVeg) return false;
+
+    if (!selectedCategory || selectedCategory === 'All' || selectedCategory.toLowerCase() === 'all') {
+      return true;
+    }
+
+    const target = selectedCategory.trim().toLowerCase();
+    const current = catName.trim().toLowerCase();
+    const foodName = (food.name || '').trim().toLowerCase();
+
+    if (current === target || current.includes(target) || target.includes(current)) {
+      return true;
+    }
+
+    if (foodName.includes(target)) {
+      return true;
+    }
+
+    // Check tokens for composite categories (e.g. "Biryani & Pulao" -> "biryani", "pulao")
+    const targetTokens = target.split(/[&,;/+]|\band\b/).map((t) => t.trim()).filter((t) => t.length > 1);
+    return targetTokens.some((tToken) => current.includes(tToken) || foodName.includes(tToken));
+  });
+
+  const cartFromThisRestaurant = items.filter(
+    (item) => restaurant && item.restaurantId === restaurant._id
+  );
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -80,55 +127,6 @@ export const RestaurantDetailPage: React.FC = () => {
       />
     );
   }
-
-  // Derive unique categories from foods
-  const foodCategories = Array.from(
-    new Set(
-      foods.map((food) => {
-        if (typeof food.categoryId === 'object' && food.categoryId !== null) {
-          return (food.categoryId as any).name;
-        }
-        return 'Specialties';
-      })
-    )
-  );
-
-  // Filter foods by selectedCategory & onlyVeg using robust normalized matching
-  const filteredFoods = useMemo(() => {
-    return foods.filter((food) => {
-      const catName =
-        typeof food.categoryId === 'object' && food.categoryId !== null
-          ? (food.categoryId as any).name
-          : 'Specialties';
-
-      const matchesVeg = !onlyVeg || food.isVeg;
-      if (!matchesVeg) return false;
-
-      if (!selectedCategory || selectedCategory === 'All' || selectedCategory.toLowerCase() === 'all') {
-        return true;
-      }
-
-      const target = selectedCategory.trim().toLowerCase();
-      const current = catName.trim().toLowerCase();
-      const foodName = (food.name || '').trim().toLowerCase();
-
-      if (current === target || current.includes(target) || target.includes(current)) {
-        return true;
-      }
-
-      if (foodName.includes(target)) {
-        return true;
-      }
-
-      // Check tokens for composite categories (e.g. "Biryani & Pulao" -> "biryani", "pulao")
-      const targetTokens = target.split(/[&,;/+]|\band\b/).map((t) => t.trim()).filter((t) => t.length > 1);
-      return targetTokens.some((tToken) => current.includes(tToken) || foodName.includes(tToken));
-    });
-  }, [foods, selectedCategory, onlyVeg]);
-
-  const cartFromThisRestaurant = items.filter(
-    (item) => item.restaurantId === restaurant._id
-  );
 
   return (
     <div className="space-y-8">

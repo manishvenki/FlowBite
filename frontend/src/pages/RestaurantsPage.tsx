@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { Restaurant } from '../types/restaurant';
@@ -142,20 +142,20 @@ export const RestaurantsPage: React.FC = () => {
   };
 
   // Dynamically extract all actual cuisine values present in the API data
-  const cuisineOptions = useMemo(() => {
+  const cuisineOptions = (() => {
     const optionsMap = new Map<string, string>(); // normalizedKey -> displayName
 
     // 1. From loaded categories
-    categories.forEach((cat) => {
-      const raw = (cat.name || '').trim();
+    (categories || []).forEach((cat) => {
+      const raw = (cat?.name || '').trim();
       if (raw) {
         optionsMap.set(raw.toLowerCase(), raw);
       }
     });
 
     // 2. From loaded restaurants' cuisine field (split comma/semicolon/slash separated tokens)
-    rawRestaurants.forEach((rest) => {
-      if (rest.cuisine) {
+    (rawRestaurants || []).forEach((rest) => {
+      if (rest?.cuisine) {
         const parts = rest.cuisine.split(/[,;/]+/).map((p) => p.trim()).filter(Boolean);
         parts.forEach((part) => {
           const norm = part.toLowerCase();
@@ -184,12 +184,12 @@ export const RestaurantsPage: React.FC = () => {
     }
 
     return Array.from(optionsMap.values());
-  }, [categories, rawRestaurants, selectedCuisine]);
+  })();
 
-  // Filter restaurants by selected cuisine
-  const displayedRestaurants = useMemo(() => {
-    return rawRestaurants.filter((rest) => matchRestaurantCuisine(rest, selectedCuisine));
-  }, [rawRestaurants, selectedCuisine]);
+  // Filter restaurants by selected cuisine directly
+  const displayedRestaurants = (rawRestaurants || []).filter((rest) =>
+    matchRestaurantCuisine(rest, selectedCuisine)
+  );
 
   const isAllSelected = !selectedCuisine || selectedCuisine === 'All' || selectedCuisine.toLowerCase() === 'all';
 
