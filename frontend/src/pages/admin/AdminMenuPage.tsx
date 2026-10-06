@@ -26,6 +26,7 @@ import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import { formatCurrency } from '../../utils/formatters';
+import { getFoodImage, DEFAULT_FOOD_FALLBACK } from '../../utils/foodImage';
 
 export const AdminMenuPage: React.FC = () => {
   const { success, error: toastError } = useToast();
@@ -272,9 +273,12 @@ export const AdminMenuPage: React.FC = () => {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={f.image}
+                            src={getFoodImage(f)}
                             alt={f.name}
                             className="w-10 h-10 rounded-lg object-cover border border-sand-border shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = DEFAULT_FOOD_FALLBACK;
+                            }}
                           />
                           <div>
                             <span className="font-semibold text-olive-dark block">

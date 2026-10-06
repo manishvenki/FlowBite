@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   MapPin,
   Clock,
@@ -29,8 +29,17 @@ export const RestaurantDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category') || searchParams.get('cuisine') || 'All';
+
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam);
   const [onlyVeg, setOnlyVeg] = useState(false);
+
+  useEffect(() => {
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [categoryParam]);
 
   const fetchRestaurantDetail = async () => {
     if (!id) return;
@@ -84,17 +93,38 @@ export const RestaurantDetailPage: React.FC = () => {
     )
   );
 
-  // Filter foods by selectedCategory & onlyVeg
-  const filteredFoods = foods.filter((food) => {
-    const catName =
-      typeof food.categoryId === 'object' && food.categoryId !== null
-        ? (food.categoryId as any).name
-        : 'Specialties';
+  // Filter foods by selectedCategory & onlyVeg using robust normalized matching
+  const filteredFoods = useMemo(() => {
+    return foods.filter((food) => {
+      const catName =
+        typeof food.categoryId === 'object' && food.categoryId !== null
+          ? (food.categoryId as any).name
+          : 'Specialties';
 
-    const matchesCategory = selectedCategory === 'All' || catName === selectedCategory;
-    const matchesVeg = !onlyVeg || food.isVeg;
-    return matchesCategory && matchesVeg;
-  });
+      const matchesVeg = !onlyVeg || food.isVeg;
+      if (!matchesVeg) return false;
+
+      if (!selectedCategory || selectedCategory === 'All' || selectedCategory.toLowerCase() === 'all') {
+        return true;
+      }
+
+      const target = selectedCategory.trim().toLowerCase();
+      const current = catName.trim().toLowerCase();
+      const foodName = (food.name || '').trim().toLowerCase();
+
+      if (current === target || current.includes(target) || target.includes(current)) {
+        return true;
+      }
+
+      if (foodName.includes(target)) {
+        return true;
+      }
+
+      // Check tokens for composite categories (e.g. "Biryani & Pulao" -> "biryani", "pulao")
+      const targetTokens = target.split(/[&,;/+]|\band\b/).map((t) => t.trim()).filter((t) => t.length > 1);
+      return targetTokens.some((tToken) => current.includes(tToken) || foodName.includes(tToken));
+    });
+  }, [foods, selectedCategory, onlyVeg]);
 
   const cartFromThisRestaurant = items.filter(
     (item) => item.restaurantId === restaurant._id
@@ -117,6 +147,10 @@ export const RestaurantDetailPage: React.FC = () => {
             src={restaurant.image}
             alt={restaurant.name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src =
+                'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 

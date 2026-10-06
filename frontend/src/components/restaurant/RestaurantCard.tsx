@@ -23,6 +23,10 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) =>
           alt={restaurant.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src =
+              'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';
+          }}
         />
 
         {/* Gradient overlay for contrast */}

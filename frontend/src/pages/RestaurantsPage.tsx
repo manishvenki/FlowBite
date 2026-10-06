@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, SlidersHorizontal, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Restaurant } from '../types/restaurant';
 import { Category } from '../types/category';
 import { restaurantService } from '../services/restaurantService';
@@ -12,20 +12,79 @@ import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { PageHeader } from '../components/common/PageHeader';
 
+/**
+ * Robust, case-insensitive, token-aware matching between a restaurant and a cuisine filter.
+ * Handles single cuisines ("Pizza", "Burger", "Indian"), composite categories ("Biryani & Pulao"),
+ * comma-separated restaurant tags ("North Indian, Mughlai, Tandoor"), and whitespace/capitalization variations.
+ */
+export const matchRestaurantCuisine = (restaurant: Restaurant, cuisineFilter: string): boolean => {
+  if (!cuisineFilter || cuisineFilter === 'All') return true;
+
+  const target = cuisineFilter.trim().toLowerCase();
+  if (!target || target === 'all') return true;
+
+  const restCuisine = (restaurant.cuisine || '').trim().toLowerCase();
+  const restName = (restaurant.name || '').trim().toLowerCase();
+  const restDesc = (restaurant.description || '').trim().toLowerCase();
+
+  // 1. Direct or substring match in restaurant.cuisine (e.g. "indian" matches "north indian, mughlai")
+  if (restCuisine.includes(target) || target.includes(restCuisine)) {
+    return true;
+  }
+
+  // 2. Tokenized match on comma/slash-separated cuisine items
+  const restTokens = restCuisine.split(/[,;/]+/).map((t) => t.trim()).filter(Boolean);
+  if (restTokens.some((token) => token === target || token.includes(target) || target.includes(token))) {
+    return true;
+  }
+
+  // 3. Composite target tokens (e.g. "Biryani & Pulao" -> matches "biryani" or "pulao")
+  const targetTokens = target
+    .split(/[&,;/+]|\band\b/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1);
+
+  if (targetTokens.some((tToken) => {
+    return (
+      restCuisine.includes(tToken) ||
+      restTokens.some((rToken) => rToken.includes(tToken) || tToken.includes(rToken))
+    );
+  })) {
+    return true;
+  }
+
+  // 4. Restaurant name or description keyword match (e.g. dishes, specialties, styles)
+  if (restName.includes(target) || restDesc.includes(target)) {
+    return true;
+  }
+
+  if (targetTokens.some((tToken) => restName.includes(tToken) || restDesc.includes(tToken))) {
+    return true;
+  }
+
+  return false;
+};
+
 export const RestaurantsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
-  const initialCuisine = searchParams.get('cuisine') || 'All';
+  const cuisineParam = searchParams.get('cuisine') || 'All';
 
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [rawRestaurants, setRawRestaurants] = useState<Restaurant[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState(initialSearch);
-  const [selectedCuisine, setSelectedCuisine] = useState(initialCuisine);
+  const [selectedCuisine, setSelectedCuisine] = useState(cuisineParam);
   const [onlyOpen, setOnlyOpen] = useState(false);
 
+  // Synchronize selectedCuisine whenever URL query param changes
+  useEffect(() => {
+    setSelectedCuisine(cuisineParam);
+  }, [cuisineParam]);
+
+  // Load categories from API
   useEffect(() => {
     categoryService
       .getCategories()
@@ -33,16 +92,16 @@ export const RestaurantsPage: React.FC = () => {
       .catch((err) => console.error('Error fetching categories:', err));
   }, []);
 
+  // Fetch restaurants matching search and open status
   const fetchRestaurants = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await restaurantService.getRestaurants({
         search: searchTerm.trim() || undefined,
-        cuisine: selectedCuisine !== 'All' ? selectedCuisine : undefined,
         isOpen: onlyOpen ? true : undefined,
       });
-      setRestaurants(data);
+      setRawRestaurants(data);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch restaurants');
     } finally {
@@ -52,31 +111,87 @@ export const RestaurantsPage: React.FC = () => {
 
   useEffect(() => {
     fetchRestaurants();
-  }, [selectedCuisine, onlyOpen]);
+  }, [onlyOpen]);
 
+  // Handle search submission
   const handleSearchSubmit = (val: string) => {
     setSearchParams((prev) => {
+      const updated = new URLSearchParams(prev);
       if (val.trim()) {
-        prev.set('search', val.trim());
+        updated.set('search', val.trim());
       } else {
-        prev.delete('search');
+        updated.delete('search');
       }
-      return prev;
+      return updated;
     });
     fetchRestaurants();
   };
 
+  // Handle cuisine button click
   const handleCuisineChange = (cuisine: string) => {
     setSelectedCuisine(cuisine);
     setSearchParams((prev) => {
-      if (cuisine === 'All') {
-        prev.delete('cuisine');
+      const updated = new URLSearchParams(prev);
+      if (!cuisine || cuisine === 'All' || cuisine.toLowerCase() === 'all') {
+        updated.delete('cuisine');
       } else {
-        prev.set('cuisine', cuisine);
+        updated.set('cuisine', cuisine);
       }
-      return prev;
+      return updated;
     });
   };
+
+  // Dynamically extract all actual cuisine values present in the API data
+  const cuisineOptions = useMemo(() => {
+    const optionsMap = new Map<string, string>(); // normalizedKey -> displayName
+
+    // 1. From loaded categories
+    categories.forEach((cat) => {
+      const raw = (cat.name || '').trim();
+      if (raw) {
+        optionsMap.set(raw.toLowerCase(), raw);
+      }
+    });
+
+    // 2. From loaded restaurants' cuisine field (split comma/semicolon/slash separated tokens)
+    rawRestaurants.forEach((rest) => {
+      if (rest.cuisine) {
+        const parts = rest.cuisine.split(/[,;/]+/).map((p) => p.trim()).filter(Boolean);
+        parts.forEach((part) => {
+          const norm = part.toLowerCase();
+          if (!optionsMap.has(norm)) {
+            const formatted = part
+              .split(/\s+/)
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(' ');
+            optionsMap.set(norm, formatted);
+          }
+        });
+      }
+    });
+
+    // 3. If selectedCuisine is active and not yet present, include it
+    if (selectedCuisine && selectedCuisine !== 'All') {
+      const norm = selectedCuisine.trim().toLowerCase();
+      if (!optionsMap.has(norm)) {
+        const formatted = selectedCuisine
+          .trim()
+          .split(/\s+/)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+        optionsMap.set(norm, formatted);
+      }
+    }
+
+    return Array.from(optionsMap.values());
+  }, [categories, rawRestaurants, selectedCuisine]);
+
+  // Filter restaurants by selected cuisine
+  const displayedRestaurants = useMemo(() => {
+    return rawRestaurants.filter((rest) => matchRestaurantCuisine(rest, selectedCuisine));
+  }, [rawRestaurants, selectedCuisine]);
+
+  const isAllSelected = !selectedCuisine || selectedCuisine === 'All' || selectedCuisine.toLowerCase() === 'all';
 
   return (
     <div className="space-y-8">
@@ -94,8 +209,9 @@ export const RestaurantsPage: React.FC = () => {
               setSearchTerm(val);
               if (!val.trim()) {
                 setSearchParams((prev) => {
-                  prev.delete('search');
-                  return prev;
+                  const updated = new URLSearchParams(prev);
+                  updated.delete('search');
+                  return updated;
                 });
                 fetchRestaurants();
               }
@@ -132,26 +248,29 @@ export const RestaurantsPage: React.FC = () => {
         <button
           onClick={() => handleCuisineChange('All')}
           className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shrink-0 transition-all ${
-            selectedCuisine === 'All'
+            isAllSelected
               ? 'bg-olive text-[#FFFDF5] shadow-sm'
               : 'bg-[#FAF7EE] text-olive-dark/80 hover:bg-sand/50 border border-sand-border/80'
           }`}
         >
           All Cuisines
         </button>
-        {categories.map((cat) => (
-          <button
-            key={cat._id}
-            onClick={() => handleCuisineChange(cat.name)}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shrink-0 transition-all ${
-              selectedCuisine === cat.name
-                ? 'bg-olive text-[#FFFDF5] shadow-sm'
-                : 'bg-[#FAF7EE] text-olive-dark/80 hover:bg-sand/50 border border-sand-border/80'
-            }`}
-          >
-            {cat.name}
-          </button>
-        ))}
+        {cuisineOptions.map((opt) => {
+          const isSelected = selectedCuisine.trim().toLowerCase() === opt.trim().toLowerCase();
+          return (
+            <button
+              key={opt}
+              onClick={() => handleCuisineChange(opt)}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shrink-0 transition-all ${
+                isSelected
+                  ? 'bg-olive text-[#FFFDF5] shadow-sm'
+                  : 'bg-[#FAF7EE] text-olive-dark/80 hover:bg-sand/50 border border-sand-border/80'
+              }`}
+            >
+              {opt}
+            </button>
+          );
+        })}
       </div>
 
       {/* Restaurant Results Grid */}
@@ -161,26 +280,28 @@ export const RestaurantsPage: React.FC = () => {
         </div>
       ) : error ? (
         <ErrorState message={error} onRetry={fetchRestaurants} />
-      ) : restaurants.length === 0 ? (
+      ) : displayedRestaurants.length === 0 ? (
         <EmptyState
           title="No kitchens found"
-          description="We couldn't find any restaurants matching your current search or filters. Try adjusting your criteria or search term."
+          description={`We couldn't find any restaurants matching "${selectedCuisine}". Try adjusting your criteria or exploring all cuisines.`}
           actionText="Reset All Filters"
           onAction={() => {
             setSearchTerm('');
             setSelectedCuisine('All');
             setOnlyOpen(false);
             setSearchParams({});
-            restaurantService.getRestaurants().then(setRestaurants);
+            fetchRestaurants();
           }}
         />
       ) : (
         <div>
           <p className="text-xs font-semibold text-olive-dark/60 uppercase tracking-wider mb-4">
-            Showing {restaurants.length} {restaurants.length === 1 ? 'kitchen' : 'kitchens'}
+            Showing {displayedRestaurants.length}{' '}
+            {displayedRestaurants.length === 1 ? 'kitchen' : 'kitchens'}
+            {!isAllSelected && ` for "${selectedCuisine}"`}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {restaurants.map((restaurant) => (
+            {displayedRestaurants.map((restaurant) => (
               <RestaurantCard key={restaurant._id} restaurant={restaurant} />
             ))}
           </div>

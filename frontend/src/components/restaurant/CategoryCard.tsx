@@ -31,6 +31,10 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
           alt={category.name}
           className="w-full h-full object-cover rounded-xl"
           loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src =
+              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+          }}
         />
       </div>
       <span className="text-xs sm:text-sm font-semibold tracking-tight leading-tight line-clamp-1">

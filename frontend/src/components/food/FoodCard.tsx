@@ -4,6 +4,7 @@ import { Food } from '../../types/food';
 import { Badge } from '../common/Badge';
 import { QuantitySelector } from '../common/QuantitySelector';
 import { formatCurrency } from '../../utils/formatters';
+import { getFoodImage, DEFAULT_FOOD_FALLBACK } from '../../utils/foodImage';
 import { useCart } from '../../hooks/useCart';
 import { useToast } from '../../hooks/useToast';
 
@@ -24,12 +25,14 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, restaurant }) => {
   const cartItem = items.find((item) => item.food._id === food._id);
   const quantity = cartItem ? cartItem.quantity : 0;
 
+  const displayImage = getFoodImage(food);
+
   const handleAdd = () => {
     if (restaurant.isOpen === false) {
       info('This restaurant is currently closed for orders');
       return;
     }
-    addItem(food, {
+    addItem({ ...food, image: displayImage }, {
       _id: restaurant._id,
       name: restaurant.name,
       deliveryFee: restaurant.deliveryFee,
@@ -105,10 +108,13 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, restaurant }) => {
       {/* Food Image */}
       <div className="relative w-full sm:w-32 h-36 sm:h-32 rounded-xl overflow-hidden bg-sand/30 shrink-0 order-1 sm:order-2">
         <img
-          src={food.image}
+          src={displayImage}
           alt={food.name}
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = DEFAULT_FOOD_FALLBACK;
+          }}
         />
         {!food.isAvailable && (
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">

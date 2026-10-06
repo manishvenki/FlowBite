@@ -21,6 +21,7 @@ import { Card } from '../components/common/Card';
 import { Modal } from '../components/common/Modal';
 import { Input } from '../components/common/Input';
 import { formatCurrency } from '../utils/formatters';
+import { getFoodImage, DEFAULT_FOOD_FALLBACK } from '../utils/foodImage';
 import { Address } from '../types/user';
 
 export const CheckoutPage: React.FC = () => {
@@ -246,9 +247,12 @@ export const CheckoutPage: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={item.food.image}
+                      src={getFoodImage(item.food)}
                       alt={item.food.name}
                       className="w-12 h-12 rounded-lg object-cover border border-sand-border"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_FOOD_FALLBACK;
+                      }}
                     />
                     <div>
                       <h4 className="text-sm font-semibold text-olive-dark leading-tight">

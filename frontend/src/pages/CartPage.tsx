@@ -19,6 +19,7 @@ import { Modal } from '../components/common/Modal';
 import { EmptyState } from '../components/common/EmptyState';
 import { PageHeader } from '../components/common/PageHeader';
 import { formatCurrency } from '../utils/formatters';
+import { getFoodImage, DEFAULT_FOOD_FALLBACK } from '../utils/foodImage';
 
 export const CartPage: React.FC = () => {
   const {
@@ -132,9 +133,12 @@ export const CartPage: React.FC = () => {
                 {/* Food Thumbnail & Name */}
                 <div className="flex items-center gap-4 min-w-0">
                   <img
-                    src={item.food.image}
+                    src={getFoodImage(item.food)}
                     alt={item.food.name}
                     className="w-16 h-16 rounded-xl object-cover shrink-0 border border-sand-border"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_FOOD_FALLBACK;
+                    }}
                   />
                   <div className="min-w-0">
                     <h4 className="font-serif-title font-bold text-base text-olive-dark truncate">

@@ -23,6 +23,7 @@ import { Badge } from '../components/common/Badge';
 import { Loader } from '../components/common/Loader';
 import { ErrorState } from '../components/common/ErrorState';
 import { formatCurrency } from '../utils/formatters';
+import { getFoodImage, DEFAULT_FOOD_FALLBACK } from '../utils/foodImage';
 import { useOrderRealtime } from '../hooks/useOrderRealtime';
 
 const TIMELINE_STEPS: Array<{
@@ -319,9 +320,12 @@ export const OrderDetailPage: React.FC = () => {
             >
               <div className="flex items-center gap-3">
                 <img
-                  src={item.image}
+                  src={getFoodImage(item)}
                   alt={item.name}
                   className="w-10 h-10 rounded-lg object-cover border border-sand-border"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = DEFAULT_FOOD_FALLBACK;
+                  }}
                 />
                 <div>
                   <p className="font-semibold text-olive-dark">{item.name}</p>
