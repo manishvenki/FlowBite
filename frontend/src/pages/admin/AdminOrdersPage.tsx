@@ -138,7 +138,7 @@ export const AdminOrdersPage: React.FC = () => {
       <Card className="overflow-hidden">
         {loading ? (
           <div className="p-6">
-            <SkeletonLoader type="card" count={3} />
+            <SkeletonLoader type="table" />
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="p-8 text-center text-xs text-olive-dark/70">

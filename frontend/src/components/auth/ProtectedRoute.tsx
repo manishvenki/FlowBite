@@ -16,7 +16,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const location = useLocation();
 
   if (loading) {
-    return <Loader fullScreen text="Verifying authentication..." />;
+    return <Loader fullScreen text="Getting your table ready..." />;
   }
 
   if (!user) {

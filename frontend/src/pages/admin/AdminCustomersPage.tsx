@@ -13,6 +13,7 @@ import { useToast } from '../../hooks/useToast';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
+import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import { formatCurrency } from '../../utils/formatters';
 
 export const AdminCustomersPage: React.FC = () => {
@@ -86,8 +87,8 @@ export const AdminCustomersPage: React.FC = () => {
       {/* Customers Table */}
       <Card className="overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-olive-dark/60">
-            Loading customer accounts...
+          <div className="p-6">
+            <SkeletonLoader type="table" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center text-xs text-olive-dark/60">

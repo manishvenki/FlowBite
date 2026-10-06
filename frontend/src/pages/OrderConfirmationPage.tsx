@@ -35,7 +35,7 @@ export const OrderConfirmationPage: React.FC = () => {
   }, [id]);
 
   if (loading) {
-    return <Loader fullScreen text="Finalizing your dining order confirmation..." />;
+    return <Loader fullScreen text="Preparing your BiteFlow..." />;
   }
 
   if (error || !order) {

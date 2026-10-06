@@ -103,7 +103,7 @@ export const OrderDetailPage: React.FC = () => {
   });
 
   if (loading) {
-    return <Loader fullScreen text="Loading live order status..." />;
+    return <Loader fullScreen text="Something delicious is on the way..." />;
   }
 
   if (error || !order) {

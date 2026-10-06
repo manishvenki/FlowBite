@@ -72,7 +72,7 @@ export const OrdersPage: React.FC = () => {
 
       {loading ? (
         <div className="space-y-4">
-          <SkeletonLoader type="card" count={3} />
+          <SkeletonLoader type="order" count={3} />
         </div>
       ) : error ? (
         <ErrorState message={error} onRetry={fetchOrders} />

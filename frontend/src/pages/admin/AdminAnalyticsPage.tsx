@@ -11,6 +11,7 @@ import { adminService, AdminDashboardData } from '../../services/adminService';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
+import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import { formatCurrency } from '../../utils/formatters';
 import { RupeeIcon } from '../../components/common/RupeeIcon';
 
@@ -35,7 +36,20 @@ export const AdminAnalyticsPage: React.FC = () => {
   }, []);
 
   if (loading || !data) {
-    return <p className="text-xs text-olive-dark/60 py-8 text-center">Loading store analytics...</p>;
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Store Analytics & Insights"
+          subtitle="Loading real-time culinary performance metrics..."
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SkeletonLoader type="kpi" count={4} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+          <SkeletonLoader type="card" count={2} />
+        </div>
+      </div>
+    );
   }
 
   const { kpi, statusCounts, popularItems, totalOrdersCount } = data;

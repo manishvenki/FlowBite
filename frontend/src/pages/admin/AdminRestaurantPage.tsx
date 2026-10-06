@@ -23,6 +23,7 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
+import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import { formatCurrency } from '../../utils/formatters';
 
 const BENGALURU_AREAS = [
@@ -263,7 +264,22 @@ export const AdminRestaurantPage: React.FC = () => {
   };
 
   if (loading) {
-    return <p className="text-xs text-olive-dark/60 py-8 text-center">Loading store profile...</p>;
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Store & Restaurant Management"
+          subtitle="Loading culinary kitchen configuration and settings..."
+        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 space-y-4">
+            <SkeletonLoader type="card" count={3} />
+          </div>
+          <div className="lg:col-span-2 space-y-6">
+            <SkeletonLoader type="card" count={2} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

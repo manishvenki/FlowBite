@@ -34,10 +34,12 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 import { LocationProvider } from './context/LocationContext';
 import { BengaluruLocationModal } from './components/common/BengaluruLocationModal';
+import { ScrollToTop } from './components/common/ScrollToTop';
 
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <ToastProvider>
         <AuthProvider>
           <LocationProvider>

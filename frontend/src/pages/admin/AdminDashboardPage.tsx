@@ -79,7 +79,15 @@ export const AdminDashboardPage: React.FC = () => {
       <div className="space-y-6">
         <PageHeader title="Store Dashboard" subtitle="Loading operational performance..." />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <SkeletonLoader type="card" count={4} />
+          <SkeletonLoader type="kpi" count={4} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+          <div className="lg:col-span-2 space-y-4">
+            <SkeletonLoader type="table" />
+          </div>
+          <div className="space-y-4">
+            <SkeletonLoader type="card" count={2} />
+          </div>
         </div>
       </div>
     );

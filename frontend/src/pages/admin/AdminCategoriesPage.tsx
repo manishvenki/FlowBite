@@ -16,6 +16,7 @@ import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
+import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 
 export const AdminCategoriesPage: React.FC = () => {
   const { success, error: toastError } = useToast();
@@ -139,7 +140,9 @@ export const AdminCategoriesPage: React.FC = () => {
 
       {/* Categories Grid */}
       {loading ? (
-        <p className="text-xs text-olive-dark/60 py-6 text-center">Loading categories...</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          <SkeletonLoader type="card" count={6} />
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
           {categories.map((c) => (

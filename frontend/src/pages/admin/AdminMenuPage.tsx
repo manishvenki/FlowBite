@@ -24,6 +24,7 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
+import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import { formatCurrency } from '../../utils/formatters';
 
 export const AdminMenuPage: React.FC = () => {
@@ -240,8 +241,8 @@ export const AdminMenuPage: React.FC = () => {
       {/* Food Items Table */}
       <Card className="overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-olive-dark/60">
-            Loading menu catalog...
+          <div className="p-6">
+            <SkeletonLoader type="table" />
           </div>
         ) : filteredFoods.length === 0 ? (
           <div className="p-8 text-center text-xs text-olive-dark/60">
