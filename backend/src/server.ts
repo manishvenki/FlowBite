@@ -73,6 +73,16 @@ app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Ensure DB connection for incoming requests in serverless environment
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+  } catch {
+    // Ignore error here; controllers catch and report database errors gracefully
+  }
+  next();
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({
